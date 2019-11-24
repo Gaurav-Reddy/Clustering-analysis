@@ -4,7 +4,7 @@ Assignment 2
 Assigned on 13 November 2019
 Due on 9 December 2019
 
-Total Points: 150
+Total Points are: 150
 
 
 
