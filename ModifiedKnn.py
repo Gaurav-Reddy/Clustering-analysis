@@ -29,6 +29,8 @@ print(df.isnull().sum()) #see number of missing values
 values=df.values
 imputer=Imputer()
 transformed_values = imputer.fit_transform(values) #we have filled the missing values with means of col
+
+
 # count the number of NaN values in each column
 print(np.isnan(transformed_values).sum())   # should be ==0
 
@@ -41,53 +43,59 @@ waterData_clean= normalize(transformed_values)
 #here we start applying CLUSTERING!!!!!!!!!!!!!!!
 
 cost =[] 
-for i in range(1, 6): 
-    KM = KMeans(n_clusters = i, max_iter = 500) 
+for i in range(2, 39): 
+    KM = KMeans(n_clusters = i,random_state=i, init='k-means++') 
     KM.fit(waterData_clean) 
       
     # calculates squared error 
     # for the clustered points 
-    cost.append(KM.inertia_)  
+    
+    
+    cost.append(KM.inertia_) 
+    
 
-KM = KMeans(n_clusters = 5, max_iter = 500) 
-KM.fit(waterData_clean)    
-print(silhouette_score(waterData_clean, KM.labels_))
     
 # Get the cluster labels
 
 print("\nKnn computed successfully\n")
 
-'''
-from yellowbrick.cluster import KElbowVisualizer
-
-# Instantiate a scikit-learn K-Means model
-model = KMeans(random_state=0)
-
-# Instantiate the KElbowVisualizer with the number of clusters and the metric 
-visualizer = KElbowVisualizer(model, k=(2,12),metric='distortion')
-
-# Fit the data and visualize
-visualizer.fit(waterData_clean)    
-visualizer.poof() '''
-
-#seeing the kmeans plot
-'''
-for i in range(len(KM.labels_)):
-       print(str(i+1)+" "+str(KM.labels_[i]))     #OUTPUT'''
 
 
 # plot the cost against K values 
-
-plt.plot(range(1, 6), cost, color ='b', linewidth ='3') 
+from kneed import KneeLocator                                                  #THIS ISA NEW PACKAGE TO LOCATE THE KNEE POINT
+kn = KneeLocator(range(2, 39), cost, curve='convex', direction='decreasing')
+optimum_K= (kn.knee)
+#kneedle.plot_knee_normalized()
+print(optimum_K)
+'''
+plt.xlabel('number of clusters k')
+plt.ylabel('Sum of squared distances')
 plt.grid()
 plt.minorticks_on()
 plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
 plt.grid(which='major', linestyle='-', linewidth='0.5', color='red')
-plt.xlabel("Value of K") 
-plt.ylabel("Sqaured Error (Cost)") 
-plt.ylim(ymin=0)
-plt.xlim(xmin=0)
-plt.show() # clear the plot 
-  
+plt.plot(range(2,39), cost, 'bx-')
+plt.vlines(kn.knee, plt.ylim()[0], plt.ylim()[1], linestyles='dashed')'''
+
+KM = KMeans(n_clusters = optimum_K, init='k-means++')                           #THIS IS TO RUN THE K MEANS WITH AN OPTIMUM CLUSTERS
+KM.fit(waterData_clean) 
+y_kmeans = KM.predict(waterData_clean)
+
+'''
+from mpl_toolkits.mplot3d import Axes3D
+fig = plt.figure()
+ax = Axes3D(fig)
+
+ax.scatter(waterData_clean[:, 12], waterData_clean[:, 13],waterData_clean[:, 1], c=y_kmeans, s=50, cmap='viridis')
+
+centers = KM.cluster_centers_
+ax.scatter(centers[:, 12], centers[:, 13], centers[:, 1], c='black', s=200, alpha=0.5);'''
+
+for i in range(len(KM.labels_)):
+       #print(str(i+1)+" "+str(KM.labels_[i]))
+       f = open("ModiKnn_outputFile.txt", "a")
+       f.write(str(i+1)+" "+str(KM.labels_[i])+"\n")
+
+f.close()  
 # the point of the elbow is the  
 # most optimal value for choosing k 
