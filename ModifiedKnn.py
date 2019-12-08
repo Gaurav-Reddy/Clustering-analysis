@@ -6,11 +6,10 @@ Created on Sat Nov 23 20:49:46 2019
 """
 import pandas as pd
 import numpy as np
+import os
 from sklearn.preprocessing import Imputer
 from sklearn.preprocessing import normalize
 from sklearn.cluster import KMeans 
-from sklearn.metrics import silhouette_score
-from scipy.spatial.distance import cdist 
 import matplotlib.pyplot as plt  
 
 #py 1st file commit
@@ -32,8 +31,9 @@ transformed_values = imputer.fit_transform(values) #we have filled the missing v
 
 
 # count the number of NaN values in each column
+print("This value should be zero as this displays the no of NAN or missing values:")
 print(np.isnan(transformed_values).sum())   # should be ==0
-
+print("\n")
 #Begin normalizing dataset
 #we plane to normalize every sample induvidually
 #we normalize everything to a value between 0 and 1 based on description in the readme file
@@ -43,7 +43,7 @@ waterData_clean= normalize(transformed_values)
 #here we start applying CLUSTERING!!!!!!!!!!!!!!!
 
 cost =[] 
-for i in range(2, 39): 
+for i in range(2, 30): 
     KM = KMeans(n_clusters = i,random_state=i, init='k-means++') 
     KM.fit(waterData_clean) 
       
@@ -63,39 +63,37 @@ print("\nKnn computed successfully\n")
 
 # plot the cost against K values 
 from kneed import KneeLocator                                                  #THIS ISA NEW PACKAGE TO LOCATE THE KNEE POINT
-kn = KneeLocator(range(2, 39), cost, curve='convex', direction='decreasing')
+kn = KneeLocator(range(2, 30), cost, curve='convex', direction='decreasing')
 optimum_K= (kn.knee)
 #kneedle.plot_knee_normalized()
 print(optimum_K)
-'''
+
 plt.xlabel('number of clusters k')
 plt.ylabel('Sum of squared distances')
 plt.grid()
 plt.minorticks_on()
-plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
-plt.grid(which='major', linestyle='-', linewidth='0.5', color='red')
-plt.plot(range(2,39), cost, 'bx-')
-plt.vlines(kn.knee, plt.ylim()[0], plt.ylim()[1], linestyles='dashed')'''
+plt.grid(which='minor', linestyle=':', linewidth='0.5', color='grey')
+plt.grid(which='major', linestyle='-', linewidth='0.5', color='blue')
+plt.plot(range(2,30), cost, 'bx-',color='green')
+plt.vlines(kn.knee, plt.ylim()[0], plt.ylim()[1], linestyles='dashed',color='red')
 
 KM = KMeans(n_clusters = optimum_K, init='k-means++')                           #THIS IS TO RUN THE K MEANS WITH AN OPTIMUM CLUSTERS
 KM.fit(waterData_clean) 
 y_kmeans = KM.predict(waterData_clean)
 
-'''
-from mpl_toolkits.mplot3d import Axes3D
-fig = plt.figure()
-ax = Axes3D(fig)
 
-ax.scatter(waterData_clean[:, 12], waterData_clean[:, 13],waterData_clean[:, 1], c=y_kmeans, s=50, cmap='viridis')
 
-centers = KM.cluster_centers_
-ax.scatter(centers[:, 12], centers[:, 13], centers[:, 1], c='black', s=200, alpha=0.5);'''
+
+if os.path.isfile('ModiKnn_outputFile.txt'):                                    #checks is the output file exists and if its previously present it removes it 
+    os.remove("ModiKnn_outputFile.txt")                                         #and helps removing it making a new file
+    print("File Removed! A new file will be created with the KNN output \n")
+
 
 for i in range(len(KM.labels_)):
-       #print(str(i+1)+" "+str(KM.labels_[i]))
        f = open("ModiKnn_outputFile.txt", "a")
        f.write(str(i+1)+" "+str(KM.labels_[i])+"\n")
 
-f.close()  
+f.close()
+print("Output File created")  
 # the point of the elbow is the  
 # most optimal value for choosing k 

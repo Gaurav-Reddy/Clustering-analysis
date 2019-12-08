@@ -4,7 +4,7 @@ Created on Sun Nov 24 22:02:08 2019
 
 @author: Y Gaurav Reddy
 """
-
+import os
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import Imputer
@@ -40,14 +40,21 @@ waterData_clean= normalize(transformed_values)
 
 
 #Applying PCA
-
+plt.figure()
 pca = decomposition.PCA(n_components=2)             #come to this conclusion
 waterData_pc = pca.fit_transform(waterData_clean)
 waterData_pc.shape
-#plt.plot(np.cumsum(pca.explained_variance_ratio_))
-
+plt.plot((pca.explained_variance_ratio_))
+plt.grid()
+plt.minorticks_on()
+plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
+#plt.set_ylim(ymin=0)
+plt.grid(which='major', linestyle='-', linewidth='0.5', color='red')
+plt.plot(np.cumsum(pca.explained_variance_ratio_))
+plt.xlabel('number of components')
+plt.ylabel('explained variance');
 cost =[] 
-for i in range(2, 39): 
+for i in range(2, 20): 
     KM = KMeans(n_clusters = i,random_state=i, init='k-means++') 
     KM.fit(waterData_pc) 
       
@@ -67,34 +74,44 @@ print("\nKnn computed successfully\n")
 
 # plot the cost against K values 
 from kneed import KneeLocator                                                  #THIS ISA NEW PACKAGE TO LOCATE THE KNEE POINT
-kn = KneeLocator(range(2, 39), cost, curve='convex', direction='decreasing')
+kn = KneeLocator(range(2, 20), cost, curve='convex', direction='decreasing')
 optimum_K= (kn.knee)
-#kneedle.plot_knee_normalized()
+
 
 print(optimum_K)
-'''
+
+plt.figure()
 plt.xlabel('number of clusters k')
 plt.ylabel('Sum of squared distances')
 plt.grid()
 plt.minorticks_on()
 plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
 plt.grid(which='major', linestyle='-', linewidth='0.5', color='red')
-plt.plot(range(2,39), cost, 'bx-')
-plt.vlines(kn.knee, plt.ylim()[0], plt.ylim()[1], linestyles='dashed')'''
+plt.plot(range(2,20), cost, 'bx-')
+plt.vlines(kn.knee, plt.ylim()[0], plt.ylim()[1], linestyles='dashed')
 
-KM = KMeans(n_clusters = optimum_K, init='k-means++')                           #THIS IS TO RUN THE K MEANS WITH AN OPTIMUM CLUSTERS
+KM = KMeans(n_clusters = optimum_K, init='k-means++')                           #THIS IS TO RUN THE K MEANS WITH AN OPTIMUM number of CLUSTERS
 KM.fit(waterData_pc) 
 y_kmeans = KM.predict(waterData_pc)
 
-#plt.scatter(waterData_pc[:, 0], waterData_pc[:, 1], c=y_kmeans, s=50, cmap='viridis')
+plt.figure()
+plt.scatter(waterData_pc[:, 0], waterData_pc[:, 1], c=y_kmeans, s=50, cmap='viridis')
 
 centers = KM.cluster_centers_
-#plt.scatter(centers[:, 0], centers[:, 1], c='black', s=200, alpha=0.5);
+plt.scatter(centers[:, 0], centers[:, 1], c='black', s=200, alpha=0.5);
 
-'''plt.scatter(waterData_pc[:,0
-    ],waterData_pc[:,1],alpha=.1, color='black')'''
+plt.figure()
+plt.scatter(waterData_pc[:,0
+    ],waterData_pc[:,1],alpha=.1, color='black')
+    
+if os.path.isfile('ModiKnn_PCA_outputFile.txt'):                                    #checks is the output file exists and if its previously present it removes it 
+    os.remove("ModiKnn_PCA_outputFile.txt")                                         #and helps removing it making a new file
+    print("File Removed! A new file will be created with the KNN output \n")
+
+
 for i in range(len(KM.labels_)):
-       #print(str(i+1)+" "+str(KM.labels_[i]))
-       f = open("ModiKnnPCA_outputFile.txt", "a")
+       f = open("ModiKnn_PCA_outputFile.txt", "a")
        f.write(str(i+1)+" "+str(KM.labels_[i])+"\n")
+
 f.close()
+print("Output File created")  
